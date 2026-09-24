@@ -1,17 +1,10 @@
 # Laravel 11 / PHP 8.3 runtime for Render and other Docker-based hosts
-FROM node:22-alpine AS frontend
-WORKDIR /app
-COPY package*.json ./
-RUN npm install
-COPY vite.config.js ./
-COPY resources ./resources
-RUN npm run build
-
 FROM php:8.3-cli-bookworm
+
 WORKDIR /var/www/html
 
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends git unzip libzip-dev libicu-dev libxml2-dev libonig-dev \
+    && apt-get install -y --no-install-recommends git unzip libzip-dev libicu-dev libxml2-dev libonig-dev libsqlite3-dev \
     && docker-php-ext-install pdo_sqlite mbstring intl xml zip \
     && rm -rf /var/lib/apt/lists/*
 
@@ -20,7 +13,6 @@ COPY composer.json composer.lock ./
 RUN composer install --no-dev --prefer-dist --no-interaction --optimize-autoloader --no-scripts
 
 COPY . .
-COPY --from=frontend /app/public/build ./public/build
 
 RUN mkdir -p storage/framework/cache/data storage/framework/sessions storage/framework/views storage/logs bootstrap/cache database \
     && touch database/database.sqlite \
